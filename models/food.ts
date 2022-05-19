@@ -14,7 +14,7 @@ class Food extends Model{
     public readonly createdAt!:Date;
     public readonly updatedAt!:Date;
 
-    public addRestaurant! : BelongsToSetAssociationMixin<Restaurant,number>
+    public addRestaurant! : BelongsToSetAssociationMixin<Restaurant,string>
 
 }
 Food.init({
@@ -43,7 +43,7 @@ Food.init({
 })
 
 export const associate = (db:dbType)=>{
-    db.Food.belongsTo(db.Restaurant,{foreignKey:'restaurant_id',targetKey:"id"});
+    db.Food.belongsTo(db.Restaurant,{foreignKey:'restaurant_pk',targetKey:"restaurantId"});
 };
 
 export default Food;

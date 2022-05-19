@@ -4,6 +4,7 @@ import Food from "../models/food";
 
 import Restaurant from '../models/restaurant';
 import Owner from "../models/owner";
+import {producer} from "../config/kafka";
 // /:accountRandomId
 export const createRestaurant = async (req:Request,res:Response,next:NextFunction)=>{
 
@@ -21,12 +22,16 @@ export const createRestaurant = async (req:Request,res:Response,next:NextFunctio
 
             restaurantId:v4()
         });
+
         const createOwner = await Owner.create({
             ownerId:accountRandomId
         })
 
         await createRestaurant.setOwner(createOwner);
-
+        await producer.send({
+            topic:'restaurant-create-restaurant-event',
+            messages:[{value:JSON.stringify(createRestaurant,null,2)}]
+        })
         res.status(201).send({
             statusCode:201,
             message:{
@@ -52,7 +57,8 @@ export const addFood = async (req:Request,res:Response,next:NextFunction)=>{
                 model:Owner,
                 required:true
             }});
-        if(!restaurant||restaurant!.Owner.ownerId!==accountRandomId){
+
+        if(!restaurant || restaurant!.Owner.ownerId !== accountRandomId){
             throw new Error("잘못된 경로로 접근 하였습니다.");
         }
 
@@ -69,7 +75,13 @@ export const addFood = async (req:Request,res:Response,next:NextFunction)=>{
             // restaurantId:restaurant.restaurantId,
             foodId:v4()
         });
-        await restaurant!.addFood(createFood.id);
+        await restaurant!.addFood(createFood);
+        console.log(JSON.stringify(createFood,null,2));
+        await producer.send({
+            topic:'restaurant-create-food-event',
+            messages:[{value:JSON.stringify(createFood,null,2)}]
+        })
+
         res.status(201).send({
             statusCode:201,
             message : {

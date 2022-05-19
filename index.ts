@@ -7,6 +7,7 @@ import * as helmet from 'helmet'
 import * as cookieParser from "cookie-parser";
 const {sequelize} = require('./models');
 import {Eureka} from 'eureka-js-client';
+import {producer} from './config/kafka'
 
 import restaurantRouter from './routes/restaurant';
 import {NextFunction, Request, Response} from "express";
@@ -31,15 +32,15 @@ if(prod){
 const client = new Eureka({
     instance:{
         app:'restaurant-service',
-        instanceId:`${ip.address()}:${process.env.PORT!}`,
+        instanceId:`${ip.address()}:restaurant-service:${process.env.PORT!}`,
         hostName:`${ip.address()}`,
         ipAddr:`${ip.address()}`,
-        statusPageUrl:'http://localhost:3065/check',
+        statusPageUrl:`http://${ip.address()}:3065/check`,
         port:{
             '$':3065,
             '@enabled':true
         },
-        vipAddress: 'restaurant-service.jeonghyeon.com',
+        vipAddress: 'restaurant-service',
         dataCenterInfo: {
             '@class': 'com.netflix.appinfo.InstanceInfo$DefaultDataCenterInfo',
             name: 'MyOwn',
@@ -51,6 +52,10 @@ const client = new Eureka({
         servicePath:'/eureka/apps/'
     }
 })
+
+const initKafka = async ()=>{
+    await producer.connect();
+}
 
 sequelize
     .sync({force: true})
@@ -68,7 +73,7 @@ app.use(express.urlencoded({extended: true}));
 app.use(cookieParser(process.env.COOKIE_SECRET));
 
 client.start( error => {
-    console.log(error || "user service registered")
+    console.log(error || "restaurant service registered")
 });
 app.use('/',restaurantRouter);
 
@@ -85,3 +90,5 @@ app.set('port',prod?process.env.PORT:3065);
 app.listen(app.get('port'),()=>{
     console.log(`server is running on ${app.get('port')}`);
 })
+
+initKafka();

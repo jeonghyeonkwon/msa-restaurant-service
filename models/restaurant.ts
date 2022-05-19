@@ -22,11 +22,11 @@ class Restaurant extends Model {
     public readonly updatedAt!:Date;
 
     public readonly Owner! : Owner;
-    public readonly Foods?:Food[];
+    public readonly Foods? : Food[];
 
-    public setOwner!:BelongsToSetAssociationMixin<Owner,number>;
+    public setOwner!:BelongsToSetAssociationMixin<Owner,string>;
     public getOwner!:BelongsToGetAssociationMixin<Owner>
-    public addFood!: HasManyAddAssociationMixin<Food, number>
+    public addFood!: HasManyAddAssociationMixin<Food, string>
     public getFoods!: HasManyGetAssociationsMixin<Food>
 
 
@@ -55,7 +55,7 @@ Restaurant.init({
 })
 
 export const associate = (db:dbType)=>{
-    db.Restaurant.hasMany(db.Food,{foreignKey:'restaurant_id',as:'Foods'});
-    db.Restaurant.belongsTo(db.Owner,{foreignKey:'owner_id'});
+    db.Restaurant.hasMany(db.Food,{foreignKey:'restaurant_pk',as:'Foods',sourceKey:'restaurantId'});
+    db.Restaurant.belongsTo(db.Owner,{foreignKey:'owner_pk',targetKey:'ownerId'});
 }
 export default Restaurant;
